@@ -36,3 +36,22 @@ A Netlify-provided subdomain can be free. A custom `.com` domain usually costs e
 - Configure sales tax as required for your business. This starter does not automatically calculate tax.
 - Connect an order fulfillment process and a newsletter provider if needed.
 - Use Stripe test mode first. Stripe processing fees apply to successful payments; hosting may remain within the free tier subject to current limits.
+
+
+## FORMÉ STUDIOS branded resale product draft
+
+This update replaces the sample catalog with draft listings for:
+- PARKE crewneck
+- ALO matching sweat set
+- lululemon matching sweat set
+
+The listings are intentionally **not purchasable yet**. Before enabling sales:
+1. Confirm you have a legitimate source for authentic products and can fulfill each order.
+2. Replace the draft stock images with your own product photos or images you have permission to use.
+3. Replace the suggested color lists with the exact colors available for each specific style and size.
+4. Set each selling price in `script.js` (`price`) and the matching Stripe amount in `netlify/functions/create-checkout-session.mjs` (`amount`, in cents). Example: `$125.00` is `12500`.
+5. In `script.js`, set `available: true` for a product only after its price, photos, colors, sizes, and fulfillment are ready.
+6. In the checkout function, set the matching `amount` above zero and ensure its `colors` and `sizes` exactly match the storefront.
+7. Test a full purchase in Stripe test mode before taking live payments.
+
+Color lists are starter placeholders, not a claim that every listed color is currently available from the brands. Product prices are intentionally unset. FORMÉ STUDIOS should not imply that it is an authorized retailer or affiliated with these brands unless that is true. Keep purchase receipts, supplier records, and authenticity evidence.
