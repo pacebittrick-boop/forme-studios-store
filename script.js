@@ -1,0 +1,49 @@
+const PRODUCTS = [
+ {id:"essential-tee",name:"Essential Boxy Tee",category:"Tops",price:38,color:"Washed Black",tag:"CORE PIECE",image:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85",sizes:["XS","S","M","L","XL"],desc:"The everyday tee, refined. A relaxed boxy silhouette with a considered drape and a soft, substantial hand-feel."},
+ {id:"studio-hoodie",name:"Studio Heavyweight Hoodie",category:"Fleece",price:88,color:"Oatmeal",tag:"BESTSELLER",image:"https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&q=85",sizes:["S","M","L","XL"],desc:"A substantial layer with a relaxed fit, clean finish, and the kind of comfort that becomes a daily ritual."},
+ {id:"relaxed-crew",name:"Relaxed Crewneck",category:"Fleece",price:74,color:"Heather Grey",tag:"NEW ARRIVAL",image:"https://images.unsplash.com/photo-1578681994506-b8f463449011?auto=format&fit=crop&w=900&q=85",sizes:["S","M","L","XL"],desc:"A clean crewneck built for repeat wear. Easy proportions and a minimal finish make it a wardrobe anchor."},
+ {id:"daily-long-sleeve",name:"Daily Long Sleeve",category:"Tops",price:48,color:"Chalk",tag:"CORE PIECE",image:"https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=900&q=85",sizes:["XS","S","M","L","XL"],desc:"A versatile long sleeve with a clean neckline and relaxed profile. Made to stand alone or layer effortlessly."},
+ {id:"utility-tote",name:"Everyday Utility Tote",category:"Accessories",price:32,color:"Natural",tag:"STUDIO GOODS",image:"https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=900&q=85",sizes:["ONE SIZE"],desc:"A practical everyday carry with understated detailing and room for the things you bring everywhere."},
+ {id:"structured-cap",name:"Structured Studio Cap",category:"Accessories",price:30,color:"Black",tag:"STUDIO GOODS",image:"https://images.unsplash.com/photo-1588850561407-ed78c282e89b?auto=format&fit=crop&w=900&q=85",sizes:["ONE SIZE"],desc:"A low-key finishing piece with a structured crown and an adjustable fit. Designed to go with everything."}
+];
+const money = n => new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(n);
+let cart = JSON.parse(localStorage.getItem("formeCart") || "[]");
+let activeFilter = "All", activeProduct = null, selectedSize = null, toastTimer;
+const grid = document.getElementById("productGrid");
+function renderProducts(){
+ let items = PRODUCTS.filter(p=>activeFilter==="All"||p.category===activeFilter);
+ const sort=document.getElementById("sortSelect").value;
+ if(sort==="low")items.sort((a,b)=>a.price-b.price); if(sort==="high")items.sort((a,b)=>b.price-a.price);
+ grid.innerHTML=items.map(p=>`<article class="product-card"><div class="product-photo" data-product="${p.id}"><img src="${p.image}" alt="${p.name}" loading="lazy"><span class="product-tag">${p.tag}</span><button class="quick-button" data-product="${p.id}">QUICK ADD +</button></div><div class="product-meta"><div><p class="product-name">${p.name}</p><p class="product-detail">${p.color}</p></div><span class="product-price">${money(p.price)}</span></div></article>`).join("");
+}
+function persist(){localStorage.setItem("formeCart",JSON.stringify(cart));renderCart()}
+function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),2400)}
+function count(){return cart.reduce((n,i)=>n+i.qty,0)}
+function renderCart(){
+ const countValue=count();document.getElementById("cartCount").textContent=countValue;document.getElementById("drawerCount").textContent=`(${countValue})`;
+ document.getElementById("subtotal").textContent=money(cart.reduce((s,i)=>s+i.price*i.qty,0));
+ document.getElementById("cartItems").innerHTML=cart.map((i,index)=>{const p=PRODUCTS.find(p=>p.id===i.id);return `<div class="cart-row"><img src="${p.image}" alt=""><div><h3>${p.name}</h3><p>${i.color} · ${i.size}</p><p>${money(i.price)}</p><div class="quantity"><button data-qty="${index}" data-change="-1" aria-label="Decrease quantity">−</button><span>${i.qty}</span><button data-qty="${index}" data-change="1" aria-label="Increase quantity">+</button></div><button class="remove-link" data-remove="${index}">REMOVE</button></div><span class="line-price">${money(i.price*i.qty)}</span></div>`}).join("");
+ const empty=cart.length===0;document.getElementById("cartEmpty").classList.toggle("visible",empty);document.getElementById("drawerBottom").classList.toggle("hidden",empty);document.getElementById("cartItems").style.display=empty?"none":"block";
+}
+function openCart(){document.getElementById("overlay").classList.add("open");document.getElementById("cartDrawer").classList.add("open");document.getElementById("cartDrawer").setAttribute("aria-hidden","false");document.body.style.overflow="hidden"}
+function closeCart(){document.getElementById("overlay").classList.remove("open");document.getElementById("cartDrawer").classList.remove("open");document.getElementById("cartDrawer").setAttribute("aria-hidden","true");document.body.style.overflow=""}
+function openQuick(id){const p=PRODUCTS.find(p=>p.id===id);if(!p)return;activeProduct=p;selectedSize=p.sizes.includes("M")?"M":p.sizes[0];document.getElementById("quickContent").innerHTML=`<div class="quick-layout"><img src="${p.image}" alt="${p.name}"><div class="quick-info"><p class="eyebrow">${p.tag}</p><h2>${p.name}</h2><p class="price">${money(p.price)}</p><p class="description">${p.desc}</p><p class="option-label">COLOR — ${p.color.toUpperCase()}</p><p class="option-label">SELECT SIZE</p><div class="size-options">${p.sizes.map(s=>`<button class="size-option ${s===selectedSize?"selected":""}" data-size="${s}">${s}</button>`).join("")}</div><button class="button button-dark" id="addToBag">ADD TO BAG — ${money(p.price)} <span>↗</span></button><p class="product-detail" style="margin-top:16px">Free shipping on orders over $100.</p></div></div>`;
+ document.getElementById("quickView").classList.add("open");document.getElementById("overlay").classList.add("open");document.body.style.overflow="hidden";
+}
+function closeQuick(){document.getElementById("quickView").classList.remove("open");if(!document.getElementById("cartDrawer").classList.contains("open")){document.getElementById("overlay").classList.remove("open");document.body.style.overflow=""}}
+function addToBag(p,size){const existing=cart.find(i=>i.id===p.id&&i.size===size);if(existing)existing.qty++;else cart.push({id:p.id,size,color:p.color,price:p.price,qty:1});persist();closeQuick();showToast(`${p.name} added to your bag.`)}
+grid.addEventListener("click",e=>{const el=e.target.closest("[data-product]");if(el)openQuick(el.dataset.product)});
+document.querySelectorAll(".filter").forEach(btn=>btn.addEventListener("click",()=>{document.querySelectorAll(".filter").forEach(b=>b.classList.remove("active"));btn.classList.add("active");activeFilter=btn.dataset.filter;renderProducts()}));
+document.getElementById("sortSelect").addEventListener("change",renderProducts);
+document.getElementById("cartOpen").addEventListener("click",openCart);document.getElementById("cartClose").addEventListener("click",closeCart);document.getElementById("overlay").addEventListener("click",()=>{closeCart();closeQuick()});document.getElementById("quickClose").addEventListener("click",closeQuick);document.getElementById("continueShopping").addEventListener("click",()=>{closeCart();document.getElementById("shop").scrollIntoView({behavior:"smooth"})});
+document.getElementById("quickContent").addEventListener("click",e=>{const s=e.target.closest("[data-size]");if(s){selectedSize=s.dataset.size;document.querySelectorAll(".size-option").forEach(b=>b.classList.toggle("selected",b.dataset.size===selectedSize))}if(e.target.closest("#addToBag")&&activeProduct)addToBag(activeProduct,selectedSize)});
+document.getElementById("cartItems").addEventListener("click",e=>{const q=e.target.closest("[data-qty]");const r=e.target.closest("[data-remove]");if(q){const i=Number(q.dataset.qty);cart[i].qty+=Number(q.dataset.change);if(cart[i].qty<=0)cart.splice(i,1);persist()}if(r){cart.splice(Number(r.dataset.remove),1);persist()}});
+document.getElementById("checkoutButton").addEventListener("click",async()=>{
+ const button=document.getElementById("checkoutButton");button.disabled=true;button.innerHTML="PREPARING CHECKOUT…";
+ try{const res=await fetch("/.netlify/functions/create-checkout-session",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:cart.map(i=>({id:i.id,size:i.size,quantity:i.qty}))})});const data=await res.json();if(!res.ok)throw new Error(data.error||"Checkout is not configured yet.");if(data.url)window.location.href=data.url;else throw new Error("No checkout URL was returned.");}
+ catch(err){showToast(err.message.includes("Failed to fetch")?"Checkout setup is required before launch.":err.message);button.disabled=false;button.innerHTML='CONTINUE TO CHECKOUT <span>↗</span>';}
+});
+document.getElementById("newsletterForm").addEventListener("submit",e=>{e.preventDefault();document.getElementById("newsletterMessage").textContent="Thanks for your interest. Newsletter signup needs an email service connection before launch.";});
+document.getElementById("menuToggle").addEventListener("click",()=>{const nav=document.querySelector(".desktop-nav");const open=nav.style.display==="flex";nav.style.display=open?"none":"flex";if(!open){nav.style.position="absolute";nav.style.top="68px";nav.style.left="0";nav.style.right="0";nav.style.padding="22px 6%";nav.style.background="var(--paper)";nav.style.flexDirection="column";nav.style.gap="18px";nav.style.borderBottom="1px solid var(--line)";nav.style.zIndex="9"}});
+document.getElementById("year").textContent=new Date().getFullYear();
+renderProducts();renderCart();
